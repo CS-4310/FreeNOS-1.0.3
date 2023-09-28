@@ -19,7 +19,18 @@ Wait::~Wait()
 }
 
 Wait::Result Wait::exec() {
+    const ProcessClient process;
     ProcessID pid = (atoi(arguments().get("PID")));
+
+    ProcessClient::Info info;
+
+    const ProcessClient::Result result = process.processInfo(pid, info);
+
+    if (result == ProcessClient::NotFound) {
+        ERROR("No process with that ID exists!");
+        return InvalidArgument;
+    }
+
     waitpid(pid, 0, 0);
 
     return Success;
