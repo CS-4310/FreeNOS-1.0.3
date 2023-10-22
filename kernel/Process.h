@@ -112,6 +112,13 @@ class Process
      */
     uint getWaitResult() const;
 
+     /**
+     * Retrieve our priority levek.
+     *
+     * @return Process ID of our parent.
+     */
+    uint getPriorityLevel() const;
+
     /**
      * Get process shares.
      *
@@ -257,6 +264,9 @@ class Process
 
     /** Wait exit result of the other Process. */
     uint m_waitResult;
+
+    /** Priority level */
+    uint m_priorityLevel;
 
     /** Privilege level */
     bool m_privileged;
