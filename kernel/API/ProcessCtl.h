@@ -65,6 +65,9 @@ typedef struct ProcessInfo
     /** Process Identity number. Must be unique. */
     ProcessID id;
 
+    /** Process priority level. */
+    uint priority_level;
+
     /** Parent process id. */
     ProcessID parent;
 
