@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2015 Niek Linnenbank
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -26,6 +26,7 @@ ProcessList::ProcessList(int argc, char **argv)
     : POSIXApplication(argc, argv)
 {
     parser().setDescription("Output system process list");
+    parser().registerFlag('l', "level", "Include priority level");
 }
 
 ProcessList::Result ProcessList::exec()
@@ -33,30 +34,57 @@ ProcessList::Result ProcessList::exec()
     const ProcessClient process;
     String out;
 
-    // Print header
-    out << "ID  PARENT  USER GROUP STATUS     CMD\r\n";
+    if (arguments().get("level")) {
+        // Print header
+        out << "ID  PR  PARENT  USER GROUP STATUS     CMD\r\n";
 
-    // Loop processes
-    for (ProcessID pid = 0; pid < ProcessClient::MaximumProcesses; pid++)
-    {
-        ProcessClient::Info info;
-
-        const ProcessClient::Result result = process.processInfo(pid, info);
-        if (result == ProcessClient::Success)
+        // Loop processes
+        for (ProcessID pid = 0; pid < ProcessClient::MaximumProcesses; pid++)
         {
-            DEBUG("PID " << pid << " state = " << *info.textState);
+            ProcessClient::Info info;
 
-            // Output a line
-            char line[128];
-            snprintf(line, sizeof(line),
-                    "%3d %7d %4d %5d %10s %32s\r\n",
-                     pid, info.kernelState.parent,
-                     0, 0, *info.textState, *info.command);
-            out << line;
+            const ProcessClient::Result result = process.processInfo(pid, info);
+            if (result == ProcessClient::Success)
+            {
+                DEBUG("PID " << pid << " state = " << *info.textState);
+                // Output a line
+                char line[128];
+                snprintf(line, sizeof(line),
+                         "%3d %3d %7d %4d %5d %10s %32s\r\n",
+                         pid, info.kernelState.priority_level, info.kernelState.parent,
+                         0, 0, *info.textState, *info.command);
+                out << line;
+            }
         }
+
+        // Output the table
+        write(1, *out, out.length());
+    } else {
+        // Print header
+        out << "ID  PARENT  USER GROUP STATUS     CMD\r\n";
+
+        // Loop processes
+        for (ProcessID pid = 0; pid < ProcessClient::MaximumProcesses; pid++)
+        {
+            ProcessClient::Info info;
+
+            const ProcessClient::Result result = process.processInfo(pid, info);
+            if (result == ProcessClient::Success)
+            {
+                DEBUG("PID " << pid << " state = " << *info.textState);
+                // Output a line
+                char line[128];
+                snprintf(line, sizeof(line),
+                         "%3d %7d %4d %5d %10s %32s\r\n",
+                         pid, info.kernelState.parent,
+                         0, 0, *info.textState, *info.command);
+                out << line;
+            }
+        }
+
+        // Output the table
+        write(1, *out, out.length());
     }
 
-    // Output the table
-    write(1, *out, out.length());
     return Success;
 }
