@@ -120,6 +120,11 @@ class Process
     uint getPriorityLevel() const;
 
     /**
+     * Set priority level.
+     */
+    void setPriorityLevel(int level);
+
+    /**
      * Get process shares.
      *
      * @return Reference to memory shares.
