@@ -26,7 +26,12 @@ Scheduler::Scheduler()
 
 Size Scheduler::count() const
 {
-    return m_queue.count();
+    Size count = 0;
+    for (int i = 0; i < 5; i++)
+    {
+        count += m_queues[i].count();
+    }
+    return count;
 }
 
 Scheduler::Result Scheduler::enqueue(Process *proc, bool ignoreState)
@@ -37,7 +42,7 @@ Scheduler::Result Scheduler::enqueue(Process *proc, bool ignoreState)
         return InvalidArgument;
     }
 
-    m_queue.push(proc);
+    m_queues[proc->getPriorityLevel() - 1].push(proc);
     return Success;
 }
 
@@ -49,32 +54,38 @@ Scheduler::Result Scheduler::dequeue(Process *proc, bool ignoreState)
         return InvalidArgument;
     }
 
-    Size count = m_queue.count();
-
-    // Traverse the Queue to remove the Process
-    for (Size i = 0; i < count; i++)
+    for (int pr = 5; pr > 0; pr--)
     {
-        Process *p = m_queue.pop();
+        Size count = m_queues[pr - 1].count();
 
-        if (p == proc)
-            return Success;
-        else
-            m_queue.push(p);
+        // Traverse the Queue to remove the Process
+        for (Size i = 0; i < count; i++)
+        {
+            Process *p = m_queues[pr - 1].pop();
+
+            if (p == proc)
+                return Success;
+            else
+                m_queues[pr - 1].push(p);
+        }
     }
 
     FATAL("process ID " << proc->getID() << " is not in the schedule");
     return InvalidArgument;
 }
 
-Process * Scheduler::select()
+Process *Scheduler::select()
 {
-    if (m_queue.count() > 0)
+    for (int pr = 5; pr > 0; pr--)
     {
-        Process *p = m_queue.pop();
-        m_queue.push(p);
+        if (m_queues[pr - 1].count() > 0)
+        {
+            Process *p = m_queues[pr - 1].pop();
+            m_queues[p->getPriorityLevel() - 1].push(p);
 
-        return p;
+            return p;
+        }
     }
 
-    return (Process *) NULL;
+    return (Process *)NULL;
 }

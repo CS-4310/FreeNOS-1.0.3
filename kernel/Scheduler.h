@@ -90,7 +90,7 @@ class Scheduler
   private:
 
     /** Contains processes ready to run */
-    Queue<Process *, MAX_PROCS> m_queue;
+    Queue<Process *, MAX_PROCS> m_queues[5];
 };
 
 /**
@@ -98,4 +98,3 @@ class Scheduler
  */
 
 #endif /* __ASSEMBLER__ */
-#endif /* __KERNEL_SCHEDULER_H */
