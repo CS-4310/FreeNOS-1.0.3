@@ -5,14 +5,15 @@
 #include <string.h>
 #include <errno.h>
 #include <ProcessClient.h>
+#include <sys/priority.h>
 
 Renice::Renice(int argc, char **argv)
     : POSIXApplication(argc, argv)
 {
-    parser().setDescription("Alters the scheduling priority of a running process.");
-    parse().registerPositional("PRIORITY", "change the scheduling priority to this level");
-    parse().registerPositional("PROCESS_ID", "change the scheduling priority of this process");
-    parser().registerFlag('n', "priority", "change priority level");
+    parser().setDescription("Change the scheduling priority of a running process.");
+    parser().registerFlag('n', "SET_PRIORITY", "Change priority level");
+    parser().registerPositional("PRIORITY", "Priority level");
+    parser().registerPositional("PROCESS_ID", "Process ID");
 }
 
 Renice::~Renice()
@@ -21,17 +22,19 @@ Renice::~Renice()
 
 Renice::Result Renice::exec()
 {
-    if (arguments().getFlags().count() > 0)
+    if (arguments().get("PROCESS_ID") && arguments().get("SET_PRIORITY") && arguments().get("PRIORITY"))
     {
-        ProcessClient client;
-        ProcessID pid = atoi(arguments().get("PID"));
+        ProcessID pid = atoi(arguments().get("PROCESS_ID"));
         int priority = atoi(arguments().get("PRIORITY"));
-        if (priority < 1 || priority > 5)
-        {
+
+        int result = setpriority(pid, priority);
+        if (result == -1) {
+            ERROR("Invalid process ID or priority level (1-5)");
             return InvalidArgument;
         }
-        client.setPriority(pid, priority);
+        
         return Success;
     }
+    ERROR("Missing all arguments");
     return InvalidArgument;
 }
