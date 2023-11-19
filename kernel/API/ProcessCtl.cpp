@@ -180,7 +180,12 @@ API::Result ProcessCtlHandler(const ProcessID procID,
         break;
     
     case SetPriorityLevel:
-        int priority = (int) addr;
+        int priority = info->priority_level;
+        if (priority < 1 || priority > 5) {
+            ERROR("invalid priority argument on process ID " << procs->current()->getID());
+            return API::InvalidArgument;
+        }
+
         proc->setPriorityLevel(priority);
         break;
     }
